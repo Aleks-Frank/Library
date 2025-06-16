@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Reservation</title>
+</head>
+<body>
+<h1>Book Reservation</h1>
+<h2 th:text="${book.name}"></h2>
+<p>Author: <span th:text="${book.author}"></span></p>
+
+<form th:action="@{/book/reserve}" method="post">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <input type="hidden" name="bookID" th:value="${book.id}">
+
+    <div>
+        <label for="startDateBooking">Start Date:</label>
+        <input type="date" id="startDateBooking" name="startDateBooking" required th:value="${startDateBooking}">
+    </div>
+
+    <div>
+        <label for="endDateBooking">End Date:</label>
+        <input type="date" id="endDateBooking" name="endDateBooking" required th:value="${endDateBooking}">
+    </div>
+
+    <button type="submit">Confirm Reservation</button>
+</form>
+</body>
+</html>
