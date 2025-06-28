@@ -181,19 +181,17 @@ public class BookController {
     public String getBookDetails(@PathVariable Long id, Model model, Authentication authentication) {
         Optional<Book> bookOptional = libraryService.findBookById(id);
         if (bookOptional.isEmpty()) {
-            // Обработка случая, когда книга не найдена
-            return "redirect:/"; // или другая логика обработки ошибки
+            return "redirect:/";
         }
 
         Book book = bookOptional.get();
         model.addAttribute("book", book);
 
-        // Проверяем, есть ли у пользователя роль ADMIN
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
         model.addAttribute("isAdmin", isAdmin);
 
-        return "bookDetails"; // имя вашего Thymeleaf шаблона
+        return "bookDetails";
     }
 
 }
