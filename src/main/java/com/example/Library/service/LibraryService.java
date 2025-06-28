@@ -19,4 +19,7 @@ public interface LibraryService {
 
     List<Book> showAll();
 
+    List<Book> findBooksByIds(List<Long> bookIds);
+
+    List<Book> findBooksByPrefix(String prefix);
 }

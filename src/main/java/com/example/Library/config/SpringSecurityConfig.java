@@ -1,8 +1,12 @@
 package com.example.Library.config;
 
 import com.example.Library.entity.ROLE;
+import net.bull.javamelody.MonitoringFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.SecurityBuilder;
 import org.springframework.security.config.annotation.SecurityConfigurer;
@@ -15,7 +19,11 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
-public class SpringSecurityConfig {
+public class SpringSecurityConfig{
+
+    @Autowired
+    private RoleBasedAuthenticationSuccessHandler successHandler;
+
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -34,8 +42,23 @@ public class SpringSecurityConfig {
                         .requestMatchers("/book/edit/{id}").hasRole(ROLE.ADMIN.name())
                         .requestMatchers("/book/edit").hasRole(ROLE.ADMIN.name())
                         .requestMatchers("/book/delete/{id}").hasRole(ROLE.ADMIN.name())
+                        .requestMatchers("/reservations").hasRole(ROLE.ADMIN.name())
+                        .requestMatchers("/", "/login", "/register", "/logout", "/monitoring",
+                                "/monitoring/**",
+                                "/javamelody/**").permitAll()
                         .anyRequest().authenticated())
-                .formLogin(Customizer.withDefaults())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/home")
+                        .successHandler(successHandler)
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll())
                 .build();
     }
+
 }

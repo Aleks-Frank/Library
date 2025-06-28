@@ -1,13 +1,13 @@
 package com.example.Library.restController;
 
 import com.example.Library.entity.Book;
-import com.example.Library.entity.Booking;
+import com.example.Library.entity.ReserveRecord;
 import com.example.Library.entity.UserEntity;
-import com.example.Library.service.BookingService;
 import com.example.Library.service.LibraryService;
+import com.example.Library.service.ReserveRecordService;
 import com.example.Library.service.UserService;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -24,12 +25,12 @@ public class BookController {
 
     private final UserService userService;
 
-    private final BookingService bookingService;
+    private final ReserveRecordService reserveRecordService;
 
-    public BookController(LibraryService libraryService, UserService userService, BookingService bookingService) {
+    public BookController(LibraryService libraryService, UserService userService, ReserveRecordService reserveRecordService) {
         this.libraryService = libraryService;
         this.userService = userService;
-        this.bookingService = bookingService;
+        this.reserveRecordService = reserveRecordService;
     }
 
     @GetMapping("/book")
@@ -39,8 +40,12 @@ public class BookController {
     }
 
     @GetMapping("/")
-    public String showLibraryListUser(Model model){
-        model.addAttribute("listBooks", libraryService.showAll());
+    public String showLibraryListUser(@RequestParam(required = false) String search, Model model) {
+        if (search != null && !search.isEmpty()) {
+            model.addAttribute("listBooks", libraryService.findBooksByPrefix(search));
+        } else {
+            model.addAttribute("listBooks", libraryService.showAll());
+        }
         return "libraryUser";
     }
 
@@ -51,7 +56,15 @@ public class BookController {
     }
 
     @PostMapping("/book/create")
-    public String createBook(@ModelAttribute Book book){
+    public String createBook(
+            @RequestParam String name,
+            @RequestParam String author,
+            @RequestParam int year,
+            @RequestParam int countBook,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String imageUrl) {
+
+        Book book = new Book(name, author, year, countBook, description, imageUrl);
         libraryService.createNewBook(book);
         return "redirect:/book";
     }
@@ -76,9 +89,9 @@ public class BookController {
     public String showFormBooking(@PathVariable Long id, Model model){
         Optional<Book> bookDB = libraryService.findBookById(id);
         if(bookDB.isPresent() && bookDB.get().getCountBook() > 0){
-            Booking booking = new Booking();
-            booking.setBookID(id);
-            model.addAttribute("booking", booking);
+            ReserveRecord reserveRecord = new ReserveRecord();
+            reserveRecord.setBook(bookDB.get());
+            model.addAttribute("reserveRecord", reserveRecord);
             model.addAttribute("book", bookDB.get());
             return "reservationForm";
         }
@@ -87,26 +100,38 @@ public class BookController {
     }
 
     @PostMapping("/book/reserve")
-    public String processReservation(@ModelAttribute Booking booking, @RequestParam("startDateBooking") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                                     @RequestParam("endDateBooking") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate, Principal principal) {
-        Book book = libraryService.findBookById(booking.getBookID())
-                .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+    public String processReservation(
+            @RequestParam("bookID") Long bookId,  // Получаем bookID из формы
+            @RequestParam("startDateBooking") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDateBooking") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Principal principal,
+            RedirectAttributes redirectAttributes)
+    {
+        try {
+            Book book = libraryService.findBookById(bookId)
+                    .orElseThrow(() -> new IllegalArgumentException("Book not found"));
 
-        UserEntity user = userService.findByUsername(principal.getName());
-        booking.setBookID(book.getId()); // Устанавливаем ID книги
-        booking.setStartDateBooking(startDate);
-        booking.setEndDateBooking(endDate);
-        booking.setUser(user);
-        booking.setActive(true);
+            UserEntity user = userService.findByUsername(principal.getName());
 
-        // Сохраняем бронирование
-        bookingService.reserveBook(booking);
+            ReserveRecord reserveRecord = new ReserveRecord();
+            reserveRecord.setBook(book);
+            reserveRecord.setUser(user);
+            reserveRecord.setStartDateBooking(startDate);
+            reserveRecord.setEndDateBooking(endDate);
 
-        // Уменьшаем количество книг
-        book.setCountBook(book.getCountBook() - 1);
-        libraryService.updateBook(book);
+            reserveRecordService.reserveBook(reserveRecord);
 
-        return "redirect:/";
+            book.setCountBook(book.getCountBook() - 1);
+            libraryService.updateBook(book);
+
+            return "redirect:/";
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/book/reserve/" + bookId;
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/";
+        }
     }
 
     @GetMapping("/book/delete/{id}")
@@ -135,4 +160,40 @@ public class BookController {
             return "registration";
         }
     }
+
+    @GetMapping("/my-books")
+    public String showUserBooks(Principal principal, Model model) {
+        UserEntity user = userService.findByUsername(principal.getName());
+        List<ReserveRecord> userBookings = reserveRecordService.findReserveRecordsByIdUser(user.getId());
+
+        model.addAttribute("userBookings", userBookings);
+        return "userBooks";
+    }
+
+    @GetMapping("/book/return/{id}")
+    public String returnBook(@PathVariable Long id, Principal principal) {
+        UserEntity user = userService.findByUsername(principal.getName());
+        reserveRecordService.returnBook(id, user.getId());
+        return "redirect:/my-books";
+    }
+
+    @GetMapping("/book/details/{id}")
+    public String getBookDetails(@PathVariable Long id, Model model, Authentication authentication) {
+        Optional<Book> bookOptional = libraryService.findBookById(id);
+        if (bookOptional.isEmpty()) {
+            // Обработка случая, когда книга не найдена
+            return "redirect:/"; // или другая логика обработки ошибки
+        }
+
+        Book book = bookOptional.get();
+        model.addAttribute("book", book);
+
+        // Проверяем, есть ли у пользователя роль ADMIN
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+        model.addAttribute("isAdmin", isAdmin);
+
+        return "bookDetails"; // имя вашего Thymeleaf шаблона
+    }
+
 }

@@ -22,6 +22,11 @@ public class Book {
 
     private int countBook;
 
+    @Column(length = 2000)
+    private String description;
+
+    private String imageUrl;
+
     public Book(){
     }
 
@@ -30,6 +35,15 @@ public class Book {
         this.author = author;
         this.year = year;
         this.countBook = countBook;
+    }
+
+    public Book(String name, String author, int year, int countBook, String description, String imageUrl) {
+        this.name = name;
+        this.author = author;
+        this.year = year;
+        this.countBook = countBook;
+        this.description = description;
+        this.imageUrl = imageUrl;
     }
 
     public Long getId() {
@@ -70,5 +84,21 @@ public class Book {
 
     public void setCountBook(int countBook) {
         this.countBook = countBook;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

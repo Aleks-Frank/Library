@@ -1,10 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <title>Book Details</title>
+  <style>
+    .book-details {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 30px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 30px;
+    }
+    .book-cover {
+        flex: 1;
+        max-width: 300px;
+    }
+    .book-cover img {
+        width: 100%;
+        height: auto;
+        border-radius: 5px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    .book-info {
+        flex: 2;
+    }
+    .book-info h1 {
+        margin-top: 0;
+        color: #333;
+    }
+    .book-meta {
+        margin-bottom: 20px;
+        color: #555;
+    }
+    .book-description {
+        line-height: 1.6;
+        margin-bottom: 25px;
+    }
+    .actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+    .btn {
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .btn-back {
+        background-color: #6c757d;
+        color: white;
+    }
+    .btn-back:hover {
+        background-color: #5a6268;
+    }
+    .btn-reserve {
+        background-color: #28a745;
+        color: white;
+    }
+    .btn-reserve:hover {
+        background-color: #218838;
+    }
+    .unavailable {
+        color: #dc3545;
+        font-weight: bold;
+        padding: 10px;
+        background-color: #f8d7da;
+        border-radius: 5px;
+    }
+    .availability {
+        font-weight: bold;
+        margin: 15px 0;
+    }
+    .available {
+        color: #28a745;
+    }
+    .not-available {
+        color: #dc3545;
+    }
+  </style>
 </head>
 <body>
-$END$
+<div class="book-details">
+  <div class="book-cover" th:if="${book.imageUrl}">
+    <img th:src="${book.imageUrl}" alt="Book cover">
+  </div>
+
+  <div class="book-info">
+    <h1 th:text="${book.name}">Название книги</h1>
+
+    <div class="book-meta">
+      <p><strong>Автор:</strong> <span th:text="${book.author}"></span></p>
+      <p><strong>Год:</strong> <span th:text="${book.year}"></span></p>
+    </div>
+
+    <div class="availability" th:classappend="${book.countBook > 0} ? 'available' : 'not-available'">
+    <span>Количество доступных экземпляров:
+        <span th:text="${book.countBook > 0} ? ${book.countBook} : '0 (Нет в наличии)'"></span>
+    </span>
+    </div>
+
+    <div class="book-description" th:if="${book.description}">
+      <h3>Описание</h3>
+      <p th:text="${book.description}"></p>
+    </div>
+
+    <div class="actions">
+      <a th:href="${isAdmin} ? @{/book} : @{/}" class="btn btn-back">Вернуться в Библиотеку</a>
+      <a th:href="@{/book/reserve/{id}(id=${book.id})}"
+         class="btn btn-reserve"
+         th:if="${book.countBook > 0}">Забронировать</a>
+      <span th:unless="${book.countBook > 0}" class="unavailable">Не доступно для бронирования</span>
+    </div>
+  </div>
+</div>
 </body>
 </html>

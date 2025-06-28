@@ -46,4 +46,14 @@ public class LibraryServiceIMPL implements LibraryService {
         return (List<Book>) bookRepositoryDB.findAll();
     }
 
+    @Override
+    public List<Book> findBooksByIds(List<Long> ids) {
+        return (List<Book>) bookRepositoryDB.findAllById(ids);
+    }
+
+    @Override
+    public List<Book> findBooksByPrefix(String prefix) {
+        return bookRepositoryDB.findByNameStartingWithIgnoreCase(prefix);
+    }
+
 }

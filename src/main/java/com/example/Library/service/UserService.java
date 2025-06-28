@@ -68,4 +68,5 @@ public class UserService implements UserDetailsService {
     public UserEntity findByUsername(String username){
         return userRepositoryDB.findByUsername(username);
     }
+
 }

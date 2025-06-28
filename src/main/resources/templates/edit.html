@@ -1,27 +1,112 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Edit</title>
+  <meta charset="UTF-8">
+  <title>Edit Book</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="url"],
+    textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    textarea {
+        height: 100px;
+        resize: vertical;
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .current-image {
+        margin-top: 10px;
+    }
+    .current-image img {
+        max-width: 200px;
+        max-height: 200px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            background-color: #555;
+        }
+  </style>
 </head>
 <body>
-<h1>Create Contact</h1>
-<form action="/book/edit" method="post">
+<h1>Редактировать</h1>
+<form action="/book/edit" method="post" enctype="multipart/form-data">
   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
   <input type="hidden" name="id" th:value="${book.id}">
-  <div>
-    <label for="name">Name book</label>
+
+  <div class="form-group">
+    <label for="name">Название</label>
     <input type="text" id="name" name="name" required th:value="${book.name}">
   </div>
-  <div>
-    <label for="author">Author</label>
+
+  <div class="form-group">
+    <label for="author">Автор</label>
     <input type="text" id="author" name="author" required th:value="${book.author}">
   </div>
-  <div>
-    <label for="year">Year</label>
+
+  <div class="form-group">
+    <label for="year">Год выпуска</label>
     <input type="number" id="year" name="year" required th:value="${book.year}">
   </div>
-  <button type="submit">Save</button>
+
+  <div class="form-group">
+    <label for="countBook">Количество доступных книг</label>
+    <input type="number" id="countBook" name="countBook" required th:value="${book.countBook}">
+  </div>
+
+  <div class="form-group">
+    <label for="description">Описание</label>
+    <textarea id="description" name="description" th:text="${book.description}"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="imageUrl">Ссылка на изображение</label>
+    <input type="url" id="imageUrl" name="imageUrl" placeholder="https://example.com/image.jpg"
+           th:value="${book.imageUrl}" pattern="https?://.+" title="Include http:// or https://">
+
+    <div class="current-image" th:if="${book.imageUrl}">
+      <p>Изображение:</p>
+      <img th:src="${book.imageUrl}" alt="Current book cover">
+    </div>
+  </div>
+
+  <button type="submit">Сохранить изменения</button>
 </form>
+<a href="/book" class="back-link">Вернутся в Библиотеку</a>
 </body>
 </html>
