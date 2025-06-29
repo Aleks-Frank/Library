@@ -6,6 +6,9 @@ import com.example.Library.entity.UserEntity;
 import com.example.Library.repository.UserRepositoryDB;
 import com.example.Library.service.UserService;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +24,8 @@ import java.util.stream.Collectors;
 @Component
 public class MyInMemoryUserDetailService implements UserDetailsService {
 
+    private static final Logger log = LoggerFactory.getLogger(MyInMemoryUserDetailService.class);
+
     private final UserRepositoryDB userRepositoryDB;
 
     @Autowired
@@ -35,10 +40,12 @@ public class MyInMemoryUserDetailService implements UserDetailsService {
         if (userRepositoryDB.findByUsername("user") == null) {
             UserEntity user = new UserEntity("user", "123", Set.of(ROLE.USER));
             userService.saveUser(user);
+            log.debug("Создан пользователь с именем {} и паролем {}", user.getUsername(), user.getPassword());
         }
         if (userRepositoryDB.findByUsername("admin") == null) {
             UserEntity admin = new UserEntity("admin", "admin", Set.of(ROLE.ADMIN));
             userService.saveUser(admin);
+            log.debug("Создан пользователь с именем {} и паролем {}", admin.getUsername(), admin.getPassword());
         }
     }
 

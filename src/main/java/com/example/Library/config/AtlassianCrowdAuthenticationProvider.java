@@ -1,6 +1,10 @@
 package com.example.Library.config;
 
+import com.example.Library.service.LibraryServiceIMPL;
 import com.example.Library.service.UserService;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -17,6 +21,8 @@ import java.util.List;
 @Component
 public class AtlassianCrowdAuthenticationProvider implements AuthenticationProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(AtlassianCrowdAuthenticationProvider.class);
+
     @Autowired
     private UserService userService;
 
@@ -31,6 +37,7 @@ public class AtlassianCrowdAuthenticationProvider implements AuthenticationProvi
         {
             throw new AuthenticationServiceException("user not found");
         }
+        log.debug("Пользователь {} авторизирован", user.getUsername());
         return new UsernamePasswordAuthenticationToken(user.getUsername(),
                 user.getPassword(), user.getAuthorities());
     }
