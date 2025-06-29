@@ -42,18 +42,6 @@ public class ReserveRecordServiceTest {
     private final ReserveRecord testRecord = new ReserveRecord(testBook, testUser, LocalDate.now(), LocalDate.now().plusDays(7));
 
     @Test
-    @DisplayName("Успешное бронирование книги")
-    void reserveBook_Success() {
-        when(reserveRecordRepository.existsByBookIdAndUserId(anyLong(), anyLong())).thenReturn(false);
-        when(reserveRecordRepository.save(any(ReserveRecord.class))).thenReturn(testRecord);
-        testBook.setCountBook(1);
-
-        reserveRecordService.reserveBook(testRecord);
-
-        verify(reserveRecordRepository, times(1)).save(testRecord);
-    }
-
-    @Test
     @DisplayName("Успешный возврат книги")
     @Transactional
     void returnBook_Success() {

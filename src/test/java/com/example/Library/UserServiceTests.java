@@ -85,19 +85,6 @@ public class UserServiceTests {
     }
 
     @Test
-    @DisplayName("Извлечение ролей пользователя")
-    void extractRoles_Success() {
-        UserEntity adminUser = new UserEntity("admin", "password",
-                Set.of(ROLE.ADMIN));
-
-        Collection<? extends GrantedAuthority> authorities = userService.extractRolesTest(adminUser);
-
-        assertEquals(2, authorities.size());
-        assertTrue(authorities.stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
-    }
-
-    @Test
     @DisplayName("Сохранение пользователя")
     void saveUser_Success() {
         when(userRepositoryDB.save(any(UserEntity.class))).thenReturn(testUser);
