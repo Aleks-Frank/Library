@@ -4,10 +4,11 @@ import com.example.Library.entity.Book;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public interface LibraryService {
 
-    void createNewBook(Book book);
+    CompletableFuture<Void> createNewBook(Book book);
 
     Optional<Book> findBookById(Long id);
 

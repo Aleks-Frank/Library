@@ -57,6 +57,10 @@ public class UserService implements UserDetailsService {
         return password;
     }
 
+    public String preparePasswordTest(String password) {
+        return preparePassword(password);
+    }
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -73,6 +77,10 @@ public class UserService implements UserDetailsService {
         return entity.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
                 .collect(Collectors.toSet());
+    }
+
+    public Collection<? extends GrantedAuthority> extractRolesTest(UserEntity entity){
+        return extractRoles(entity);
     }
 
     public UserEntity findByUsername(String username){

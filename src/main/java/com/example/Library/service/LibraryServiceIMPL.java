@@ -5,10 +5,12 @@ import com.example.Library.repository.BookRepositoryDB;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class LibraryServiceIMPL implements LibraryService {
@@ -22,9 +24,16 @@ public class LibraryServiceIMPL implements LibraryService {
     }
 
     @Override
-    public void createNewBook(Book book) {
-        bookRepositoryDB.save(book);
-        log.info("Создана новая книга с ID: {}", book.getId());
+    @Async
+    public CompletableFuture<Void> createNewBook(Book book) {
+        try {
+            bookRepositoryDB.save(book);
+            log.info("Создана новая книга с ID: {}", book.getId());
+            return CompletableFuture.completedFuture(null);
+        } catch (Exception e) {
+            log.error("Ошибка при создании книги", e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     @Override
