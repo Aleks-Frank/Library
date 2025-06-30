@@ -57,12 +57,12 @@ public class BookController {
 
     @PostMapping("/book/create")
     public String createBook(
-            @RequestParam String name,
-            @RequestParam String author,
-            @RequestParam int year,
-            @RequestParam int countBook,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) String imageUrl) {
+            @RequestParam("name") String name,
+            @RequestParam("author") String author,
+            @RequestParam("year") int year,
+            @RequestParam("countBook") int countBook,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl) {
 
         Book book = new Book(name, author, year, countBook, description, imageUrl);
         libraryService.createNewBook(book);
@@ -147,7 +147,7 @@ public class BookController {
     }
 
     @PostMapping("/register")
-    public String adduser(UserEntity user, Model model)
+    public String adduser(@ModelAttribute UserEntity user, Model model)
     {
         try
         {

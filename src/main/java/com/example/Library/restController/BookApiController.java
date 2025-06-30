@@ -23,7 +23,7 @@ public class BookApiController {
     }
 
     @GetMapping("/search")
-    public List<Book> searchBooks(@RequestParam String prefix) {
+    public List<Book> searchBooks(@RequestParam("prefix") String prefix) {
         return libraryService.findBooksByPrefix(prefix);
     }
 
