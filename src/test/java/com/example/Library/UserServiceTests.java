@@ -22,37 +22,47 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+/**
+ * Тестовый класс для {@link UserService}.
+ * Проверяет функциональность работы с пользователями системы.
+ */
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTests {
 
+    /** Мок репозитория для работы с пользователями */
     @Mock
     private UserRepositoryDB userRepositoryDB;
 
+    /** Тестируемый сервис с внедренными зависимостями */
     @InjectMocks
     private UserService userService;
 
+    /** Тестовый пользователь с ролью USER  */
     private final UserEntity testUser = new UserEntity("testuser", "password", Set.of(ROLE.USER));
 
+    /** Проверяет успешную регистрацию нового пользователя */
     @Test
     @DisplayName("Успешное добавление нового пользователя")
-    void addUser_Success() throws Exception {
+    void addUserTest() throws Exception {
         when(userRepositoryDB.findByUsername(anyString())).thenReturn(null);
         when(userRepositoryDB.save(any(UserEntity.class))).thenReturn(testUser);
         userService.addUser("newuser", "password");
         verify(userRepositoryDB, times(1)).save(any(UserEntity.class));
     }
 
+    /** Проверяет обработку попытки регистрации существующего пользователя */
     @Test
     @DisplayName("Попытка добавить существующего пользователя")
-    void addUser_AlreadyExists() {
+    void addUserAlreadyExistsTest() {
         when(userRepositoryDB.findByUsername(anyString())).thenReturn(testUser);
         assertThrows(Exception.class, () ->
                 userService.addUser("testuser", "password"));
     }
 
+    /** Проверяет загрузку данных пользователя для аутентификации */
     @Test
     @DisplayName("Успешная загрузка пользователя по имени")
-    void loadUserByUsername_Success() {
+    void loadUserByUsernameTest() {
         when(userRepositoryDB.findByUsername(anyString())).thenReturn(testUser);
         UserDetails userDetails = userService.loadUserByUsername("testuser");
         assertEquals("testuser", userDetails.getUsername());
@@ -60,41 +70,46 @@ public class UserServiceTests {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
     }
 
+    /** Проверяет обработку попытки загрузки несуществующего пользователя */
     @Test
     @DisplayName("Загрузка несуществующего пользователя")
-    void loadUserByUsername_NotFound() {
+    void loadUserByUsernameNotFoundTest() {
         when(userRepositoryDB.findByUsername(anyString())).thenReturn(null);
         assertThrows(UsernameNotFoundException.class, () ->
                 userService.loadUserByUsername("unknown"));
     }
 
+    /** Проверяет поиск пользователя по имени */
     @Test
     @DisplayName("Успешный поиск пользователя по имени")
-    void findByUsername_Success() {
+    void findByUsernameTest() {
         when(userRepositoryDB.findByUsername(anyString())).thenReturn(testUser);
         UserEntity result = userService.findByUsername("testuser");
         assertEquals("testuser", result.getUsername());
     }
 
+    /** Проверяет обработку поиска несуществующего пользователя */
     @Test
     @DisplayName("Поиск несуществующего пользователя")
-    void findByUsername_NotFound() {
+    void findByUsernameNotFoundTest() {
         when(userRepositoryDB.findByUsername(anyString())).thenReturn(null);
         assertThrows(UsernameNotFoundException.class, () ->
                 userService.findByUsername("unknown"));
     }
 
+    /** Проверяет сохранение пользователя в репозитории */
     @Test
     @DisplayName("Сохранение пользователя")
-    void saveUser_Success() {
+    void saveUserTest() {
         when(userRepositoryDB.save(any(UserEntity.class))).thenReturn(testUser);
         userService.saveUser(testUser);
         verify(userRepositoryDB, times(1)).save(testUser);
     }
 
+    /** Проверяет подготовку пароля пользователя */
     @Test
     @DisplayName("Подготовка пароля")
-    void preparePassword_Success() {
+    void preparePasswordTest() {
         String result = userService.preparePasswordTest("rawpassword");
         assertEquals("rawpassword", result);
     }

@@ -19,54 +19,69 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+
+/** Тестовый класс для LibraryServiceIMPL.
+ * Проверяет функциональность работы с книгами:
+ * Создание, поиск, обновление и удаление книг
+ * Поиск по префиксу названия
+ * Обработка ошибок при операциях с книгами */
 @ExtendWith(MockitoExtension.class)
 public class LibraryServiceIMPLTests {
 
+    /** Мок репозитория для работы с книгами */
     @Mock
     private BookRepositoryDB bookRepositoryDB;
 
+    /** Тестируемый сервис с внедренными моками */
     @InjectMocks
     private LibraryServiceIMPL libraryService;
 
+    /** Тестовая книга для использования в тестах */
     private final Book testBook = new Book("Test Book", "Frank", 2005, 5);
 
+
+    /** Проверяет успешное создание книги */
     @Test
     @DisplayName("Успешное создание книги")
-    void createNewBook_Success() throws Exception {
+    void createNewBookTest() throws Exception {
         when(bookRepositoryDB.save(any(Book.class))).thenReturn(testBook);
         CompletableFuture<Void> future = libraryService.createNewBook(testBook);
         future.get();
         verify(bookRepositoryDB, times(1)).save(testBook);
     }
 
+    /** Проверяет обработку ошибки при создании книги */
     @Test
     @DisplayName("Ошибка при создании книги")
-    void createNewBook_Failure() {
+    void createNewBookFailTest() {
         when(bookRepositoryDB.save(any(Book.class))).thenThrow(new RuntimeException("DB Error"));
         CompletableFuture<Void> future = libraryService.createNewBook(testBook);
         assertThrows(ExecutionException.class, future::get);
     }
 
+    /** Проверяет поиск книги по ID */
     @Test
     @DisplayName("Поиск существующей книги по ID")
-    void findBookById_Exists() {
+    void findBookByIdExistsTest() {
         when(bookRepositoryDB.findById(testBook.getId())).thenReturn(Optional.of(testBook));
         Optional<Book> result = libraryService.findBookById(testBook.getId());
         assertTrue(result.isPresent());
         assertEquals("Test Book", result.get().getName());
     }
 
+    /** Проверяет обработку ошибки при поиске книги по ID */
     @Test
     @DisplayName("Поиск несуществующей книги по ID")
-    void findBookById_NotExists() {
+    void findBookByIdNotExistsTest() {
         when(bookRepositoryDB.findById(2L)).thenReturn(Optional.empty());
         Optional<Book> result = libraryService.findBookById(2L);
         assertFalse(result.isPresent());
     }
 
+    /** Проверяет обновление данных о книге в БД */
     @Test
     @DisplayName("Успешное обновление книги")
-    void updateBook_Success() {
+    void updateBookTest() {
         Book updatedBook = new Book("Updated Book", "Frank", 2004, 3);
         when(bookRepositoryDB.save(updatedBook)).thenReturn(updatedBook);
         Book result = libraryService.updateBook(updatedBook);
@@ -74,31 +89,35 @@ public class LibraryServiceIMPLTests {
         verify(bookRepositoryDB, times(1)).save(updatedBook);
     }
 
+    /** Проверяет обработку ошибки обновления данных о книге */
     @Test
     @DisplayName("Ошибка при обновлении книги")
-    void updateBook_Failure() {
+    void updateBookFailTest() {
         when(bookRepositoryDB.save(any(Book.class))).thenThrow(new RuntimeException("Update error"));
         assertThrows(RuntimeException.class, () -> libraryService.updateBook(testBook));
     }
 
+    /** Проверяет удаление книги */
     @Test
     @DisplayName("Успешное удаление книги")
-    void deleteBook_Success() {
+    void deleteBookTest() {
         doNothing().when(bookRepositoryDB).deleteById(testBook.getId());
         assertDoesNotThrow(() -> libraryService.deleteBook(testBook.getId()));
         verify(bookRepositoryDB, times(1)).deleteById(testBook.getId());
     }
 
+    /** Проверяет обработку ошибки при удалении книги */
     @Test
     @DisplayName("Ошибка при удалении книги")
-    void deleteBook_Failure() {
+    void deleteBookFailTest() {
         doThrow(new RuntimeException("Delete error")).when(bookRepositoryDB).deleteById(testBook.getId());
         assertThrows(RuntimeException.class, () -> libraryService.deleteBook(testBook.getId()));
     }
 
+    /** Проверяет поиск по началу названия книги */
     @Test
     @DisplayName("Поиск книг по префиксу")
-    void findBooksByPrefix_Success() {
+    void findBooksByPrefixTest() {
         List<Book> books = List.of(
                 new Book("Test Book 1", "Frank", 2003, 2),
                 new Book("Test Book 2", "Frank", 2005, 3)
