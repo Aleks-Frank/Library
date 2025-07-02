@@ -11,16 +11,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+/** Контроллер для управления бронированиями книг.
+ * Обрабатывает запросы, связанные с просмотром и возвратом книг.
+ * @see ReserveRecordService */
 @Controller
 @RequestMapping("/reservations")
 public class ReservationController {
 
+    /** Экземпляр интерфейса ReserveRecordService */
     private final ReserveRecordService reserveRecordService;
 
+    /** Конструктор с внедрением зависимости сервиса бронирований.
+     * @param reserveRecordService сервис для работы с бронированиями */
     public ReservationController(ReserveRecordService reserveRecordService) {
         this.reserveRecordService = reserveRecordService;
     }
 
+    /** Отображает список всех текущих бронирований.
+     * @param model модель для передачи данных в представление
+     * @return имя шаблона "reservations" с атрибутом "reservations", содержащим список бронирований */
     @GetMapping
     public String getAllReservations(Model model) {
         List<ReserveRecord> reservations = reserveRecordService.getAllReservations();
@@ -28,6 +37,10 @@ public class ReservationController {
         return "reservations";
     }
 
+    /** Обрабатывает возврат книги по ID бронирования.
+     * @param id ID бронирования
+     * @return редирект на страницу списка бронирований
+     * @throws IllegalArgumentException если бронирование с указанным ID не найдено */
     @PostMapping("/return/{id}")
     public String returnBook(@PathVariable Long id) {
         ReserveRecord reservation = reserveRecordService.getReservationById(id)

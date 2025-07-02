@@ -21,20 +21,28 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/** Сервис для работы с пользовательскими данными в памяти приложения.
+ * Реализует интерфейс UserDetailsService для интеграции со Spring Security. */
 @Component
 public class MyInMemoryUserDetailService implements UserDetailsService {
 
+    /** Логгер для записи событий и ошибок сервиса. */
     private static final Logger log = LoggerFactory.getLogger(MyInMemoryUserDetailService.class);
 
+    /** Экземпляр интерфейса UserRepositoryDB */
     private final UserRepositoryDB userRepositoryDB;
 
+    /** Экземпляр сервиса UserService */
     @Autowired
     private UserService userService;
 
+    /** Конструктор для внедрения зависимостей.
+     * @param userRepositoryDB репозиторий для работы с пользователем */
     public MyInMemoryUserDetailService(UserRepositoryDB userRepositoryDB) {
         this.userRepositoryDB = userRepositoryDB;
     }
 
+    /** Инициализирует тестовых пользователей (admin/user) при старте приложения. */
     @PostConstruct
     public void init() {
         if (userRepositoryDB.findByUsername("user") == null) {
@@ -49,8 +57,10 @@ public class MyInMemoryUserDetailService implements UserDetailsService {
         }
     }
 
-
-
+    /** Загружает пользователя по имени.
+     * @param username имя пользователя для поиска
+     * @return UserDetails с данными пользователя
+     * @throws UsernameNotFoundException если пользователь не найден */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
     {
@@ -61,7 +71,9 @@ public class MyInMemoryUserDetailService implements UserDetailsService {
         }
     }
 
-
+    /** Преобразует роли пользователя в GrantedAuthority.
+     * @param appUser сущность пользователя
+     * @return коллекция прав доступа */
     private Collection<GrantedAuthority> mapRoles(UserEntity appUser)
     {
         return appUser.getRoles().stream()

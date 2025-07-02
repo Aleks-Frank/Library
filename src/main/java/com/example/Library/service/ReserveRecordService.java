@@ -4,7 +4,6 @@ import com.example.Library.entity.Book;
 import com.example.Library.entity.ReserveRecord;
 import com.example.Library.repository.ReserveRecordRepository;
 import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,23 +14,44 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Сервис для управления процессом бронирования книг в библиотечной системе.
+ * Обеспечивает полный цикл работы с бронированиями: создание, поиск, возврат и автоматическую обработку.
+ * @see ReserveRecordServiceIMPL
+ * @see ReserveRecord
+ */
 @Service
 public class ReserveRecordService implements ReserveRecordServiceIMPL{
 
-    @Autowired
-    ReserveRecordRepository reserveRecordRepository;
+    /** Экземпляр интерфейса ReserveRecordRepository */
+    private final ReserveRecordRepository reserveRecordRepository;
 
-    @Autowired
-    LibraryService libraryService;
+    /** Экземпляр сервиса LibraryService */
+    private final LibraryService libraryService;
 
+    /** Логгер для записи событий и ошибок сервиса. */
     private static final Logger log = LoggerFactory.getLogger(ReserveRecordService.class);
 
+    /** Конструктор для внедрения зависимостей.
+     * @param reserveRecordRepository репозиторий для работы с записями бронирований
+     * @param libraryService сервис для управления книгами*/
+    @Autowired
+    public ReserveRecordService(ReserveRecordRepository reserveRecordRepository, LibraryService libraryService) {
+        this.reserveRecordRepository = reserveRecordRepository;
+        this.libraryService = libraryService;
+    }
+
+    /** Создает новую запись о бронировании книги.
+     * @param reserveRecord данные бронирования (книга и пользователь)
+     * @throws IllegalArgumentException если книга не указана (null)
+     * @throws IllegalStateException если: книга уже забронирована этим пользователем
+     * или книга отсутствует в наличии*/
     @Override
     public void reserveBook(ReserveRecord reserveRecord) {
         log.info("Пользователь с ID: {}, хочет забронировать книгу с ID: {}", reserveRecord.getUser().getId(), reserveRecord.getBook().getId());
         if (reserveRecord.getBook() == null) {
             log.error("Не удалось зарезервировать книгу");
-            throw new IllegalArgumentException("Book cannot be null");
+            throw new IllegalArgumentException("Не удалось зарезервировать книгу");
         }
 
         Long bookId = reserveRecord.getBook().getId();
@@ -50,6 +70,9 @@ public class ReserveRecordService implements ReserveRecordServiceIMPL{
         reserveRecordRepository.save(reserveRecord);
     }
 
+    /** Возвращает список всех бронирований указанного пользователя.
+     * @param id идентификатор пользователя
+     * @return список активных бронирований */
     @Override
     public List<ReserveRecord> findReserveRecordsByIdUser(Long id) {
         log.debug("Поиск книг забронированных пользователем с ID: {}", id);
@@ -58,6 +81,10 @@ public class ReserveRecordService implements ReserveRecordServiceIMPL{
         return records;
     }
 
+    /** Обрабатывает возврат книги в библиотеку.
+     * Увеличивает счетчик доступных экземпляров и удаляет запись о бронировании.
+     * @param bookId идентификатор возвращаемой книги
+     * @param userId идентификатор пользователя */
     @Transactional
     public void returnBook(Long bookId, Long userId) {
         log.info("Возвращение книги в библиотеку");
@@ -71,6 +98,13 @@ public class ReserveRecordService implements ReserveRecordServiceIMPL{
         }
     }
 
+    /** Автоматически возвращает все просроченные бронирования.
+     * Запускается ежедневно в 00:00 по системному времени.
+     * Алгоритм работы:
+     * Находит все бронирования с истекшей датой возврата
+     * Для каждого бронирования:
+     * 1) Увеличивает счетчик доступных книг
+     * 2) Удаляет запись о бронировании */
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void returnExpiredBooks() {
@@ -86,6 +120,8 @@ public class ReserveRecordService implements ReserveRecordServiceIMPL{
         }
     }
 
+    /** Возвращает список всех текущих бронирований в системе.
+     * @return полный список записей о бронировании */
     public List<ReserveRecord> getAllReservations() {
         log.info("Получение всех забронированных книг");
         List<ReserveRecord> reservations = (List<ReserveRecord>) reserveRecordRepository.findAll();
@@ -93,6 +129,9 @@ public class ReserveRecordService implements ReserveRecordServiceIMPL{
         return reservations;
     }
 
+    /** Находит запись о бронировании по её уникальному идентификатору.
+     * @param id идентификатор записи бронирования
+     * @return Optional с найденной записью */
     public Optional<ReserveRecord> getReservationById(Long id) {
         log.info("Поиск записи по ID: {}", id);
         return reserveRecordRepository.findById(id);

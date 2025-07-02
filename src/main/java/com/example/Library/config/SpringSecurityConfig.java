@@ -17,18 +17,28 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+/** Основная конфигурация безопасности приложения.
+ * @see EnableWebSecurity
+ * @see SecurityFilterChain */
 @Configuration
 @EnableWebSecurity
 public class SpringSecurityConfig{
 
+    /** Экземпляр класса RoleBasedAuthenticationSuccessHandler */
     @Autowired
     private RoleBasedAuthenticationSuccessHandler successHandler;
 
+    /** Настраивает кодировщик паролей.
+     * @return экземпляр PasswordEncoder */
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
 
+    /** Конфигурирует цепочку фильтров безопасности.
+     * @param security строитель конфигурации безопасности
+     * @return настроенный SecurityFilterChain
+     * @throws Exception при ошибках конфигурации */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity security) throws Exception{
         return security
